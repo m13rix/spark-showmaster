@@ -1,0 +1,165 @@
+
+/* Контейнер скринсейвера */
+.screensaver-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Скрыть части изображения, выходящие за пределы */
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.screensaver-overlay.hiding {
+    animation: fadeOut 0.5s ease-out forwards;
+}
+
+.screensaver-overlay img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* Блюр-фон */
+.screensaver-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: blur(20px) brightness(1.2);
+    opacity: 0.7;
+    z-index: -1;
+    object-fit: cover;
+    transform: scale(1.05);
+    transition: opacity 0.5s;
+}
+
+.screensaver-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    animation: contentScale 0.5s ease-out;
+}
+
+.screensaver-content img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.screensaver-preview {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.screensaver-preview-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: blur(15px);
+    opacity: 0.7;
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+}
+
+.video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Скрыть части изображения, выходящие за пределы */
+}
+
+.video-bg {
+    position: absolute;
+    top: 55%;
+    left: 55%;
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%);
+    filter: blur(20px) brightness(1.2);
+    opacity: 0.7;
+    z-index: 1;
+    scale: 1.1;
+}
+
+.video-main {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+/* Анимации */
+@keyframes mainVideoEnter {
+    0% {
+        transform: translate(-50%, -50%) scale(0.95);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes bgVideoEnter {
+    0% {
+        filter: blur(30px) brightness(1.5);
+    }
+    100% {
+        filter: blur(20px) brightness(1.2);
+    }
+}
+
+.video-main {
+    animation: mainVideoEnter 0.5s ease-out forwards;
+}
+
+.video-bg {
+    animation: bgVideoEnter 1.5s ease-out forwards;
+}
+
+.screensaver-preview img {
+    position: relative;
+    z-index: 2;
+    transition: transform 0.3s ease;
+}
+
+@keyframes contentScale {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}

@@ -1,0 +1,722 @@
+/* Общие стили и сброс */
+body {
+    font-family: 'Sofia Sans', sans-serif; /* Используем Sofia Sans */
+    margin: 0;
+    background-color: #080808; /* Более темный фон, почти черный */
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column; /* Вертикальное расположение элементов */
+    align-items: center; /* Центрирование по горизонтали */
+    min-height: 100vh;
+}
+
+.header, .footer {
+    background-color: #000; /* Черный фон для шапки и подвала */
+    color: #ccc;
+    text-align: center;
+    padding: 15px 0;
+    width: 100%;
+}
+
+.header {
+    font-size: 1.5em;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #111; /* Тонкая разделительная линия */
+    margin-bottom: 20px;
+}
+
+.header .logo i {
+    margin-left: 10px;
+    color: #00bcd4; /* Неоновый акцент */
+}
+
+.footer {
+    margin-top: 20px;
+    font-size: 0.85em;
+    border-top: 1px solid #111; /* Тонкая разделительная линия */
+}
+
+.content {
+    display: flex;
+    flex-direction: column; /* Вертикальное расположение медиатеки и таймлайна */
+    align-items: center; /* Центрирование контента */
+    width: 95%;
+    max-width: 1200px;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+.content-horizontal {
+    display: flex;
+    flex-direction: row; /* Вертикальное расположение медиатеки и таймлайна */
+    align-items: flex-start;
+    width: 100%;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+/* Стили для контейнера медиатеки */
+.media-browser-container {
+    width: 100%;
+}
+
+.media-browser-header {
+    text-align: left; /* Выравнивание заголовка по левому краю */
+    margin-bottom: 15px;
+    color: #bbb;
+    font-size: 1.2em;
+    letter-spacing: 0.5px;
+}
+
+.media-browser {
+    background-color: rgba(20, 20, 20, 0.9); /* Фон с легким эффектом глассморфизма */
+    border: 1px solid rgba(50, 50, 50, 0.5); /* Более тонкая граница */
+    border-radius: 10px;
+    min-height: 200px; /* Уменьшенная минимальная высота */
+    padding: 15px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Умеренная тень */
+    backdrop-filter: blur(10px); /* Эффект размытия фона */
+    -webkit-backdrop-filter: blur(10px); /* Для Safari */
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.media-browser.dragover {
+    background-color: rgba(30, 30, 30, 0.9); /* Более светлый фон при перетаскивании */
+    border-color: rgba(70, 70, 70, 0.5);
+}
+
+.media-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Меньше карточки */
+    gap: 10px; /* Меньше отступы */
+    margin-top: 10px;
+    transition-property: children;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out;
+}
+
+.media-item {
+    background-color: #151515; /* Темнее фон элементов */
+    border-radius: 6px; /* Меньше скругление */
+    padding: 8px; /* Меньше отступы */
+    cursor: grab;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    flex-direction: column;
+    padding-bottom: 35px; /* Уменьшено нижнее поле */
+    transition: transform 0.2s, background-color 0.2s;
+    user-select: none;
+    border: 1px solid #222; /* Добавлена тонкая граница */
+}
+
+.media-item:hover {
+    transform: scale(1.03); /* Меньше увеличение при наведении */
+    background-color: #1a1a1a; /* Светлее при наведении */
+    border-color: #333; /* Граница при наведении */
+}
+
+.media-item.dragging {
+    transform: scale(1.03);
+    opacity: 0.9; /* Немного прозрачнее при перетаскивании */
+    background-color: #202020; /* Еще светлее при перетаскивании */
+    border-color: #444; /* Граница при перетаскивании */
+    cursor: grabbing;
+}
+
+.fa-solid {
+    font-size: 50px; /* Меньше иконки Font Awesome */
+    object-fit: cover;
+    text-align: center;
+    border-radius: 4px; /* Меньше скругление для иконок */
+    color: #555; /* Более приглушенный цвет иконок */
+    margin-bottom: 3px; /* Меньше отступ */
+}
+
+.media-thumbnail {
+    width: 100%;
+    height: 80px; /* Меньше превью */
+    object-fit: cover;
+    border-radius: 4px; /* Меньше скругление для превью */
+}
+
+.media-info {
+    margin-top: 6px; /* Меньше отступ */
+    font-size: 0.85em; /* Меньше размер шрифта */
+    color: #bbb; /* Цвет текста */
+    position: absolute;
+    bottom: 6px; /* Меньше отступ снизу */
+    left: 6px; /* Меньше отступ слева */
+    right: 6px; /* Меньше отступ справа */
+    text-align: center;
+}
+
+.media-info div:first-child {
+    font-weight: bold;
+}
+
+.media-info div:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* Стили для таймлайна */
+.timeline-container {
+    width: 100%;
+    height: 270px; /* Уменьшенная высота таймлайна */
+    background-color: rgba(20, 20, 20, 0.9); /* Фон с эффектом глассморфизма */
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    overflow-x: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Умеренная тень */
+    backdrop-filter: blur(10px); /* Эффект размытия фона */
+    -webkit-backdrop-filter: blur(10px); /* Для Safari */
+    border: 1px solid rgba(50, 50, 50, 0.5); /* Граница */
+}
+
+.timeline-header {
+    background-color: #111; /* Темный фон для заголовка таймлайна */
+    color: #bbb;
+    padding: 10px 15px;
+    text-align: left;
+    font-size: 1.2em;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #222; /* Разделительная линия */
+}
+
+.timeline-ruler {
+    height: 30px;
+    background-color: #151515; /* Темнее фон линейки */
+    border-bottom: 1px solid #333;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+.tracks-container {
+    height: calc(100% - 30px);
+    position: relative;
+}
+
+.track {
+    height: 80px; /* Уменьшенная высота трека */
+    border-bottom: 1px solid #333;
+    padding: 5px 0; /* Меньше вертикальные отступы */
+    position: relative;
+}
+
+.track:last-child {
+    border-bottom: none; /* Убираем границу у последнего трека */
+}
+
+.track-label {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 11px; /* Меньше размер шрифта */
+    width: 50px; /* Меньше ширина для лейбла */
+    text-align: right; /* Выравнивание текста по правому краю */
+}
+
+.track-label i {
+    margin-right: 5px; /* Отступ для иконки */
+    color: #888; /* Светлее цвет иконок треков */
+}
+
+.timeline-clip {
+    border: 1px solid rgba(255,255,255,0.05); /* Едва заметная граница клипа */
+    transition: transform 0.2s;
+    margin-top: 10px; /* Меньше верхний отступ */
+    border-radius: 4px; /* Скругление углов клипа */
+    background-color: #222; /* Темный фон клипа */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* Тень для клипа */
+}
+
+.timeline-clip:hover {
+    transform: scale(1.02); /* Меньше увеличение при наведении на клип */
+    z-index: 2;
+    background-color: #2a2a2a; /* Светлее фон при наведении на клип */
+}
+
+.clip-label {
+    font-size: 0.75em; /* Меньше шрифт лейбла клипа */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ccc; /* Цвет текста лейбла клипа */
+    padding: 5px; /* Внутренний отступ в лейбле клипа */
+}
+
+.clip-duration {
+    font-size: 0.7em;
+    opacity: 0.6; /* Меньше прозрачность */
+    margin-top: 2px; /* Меньше отступ */
+    color: #999; /* Цвет текста длительности клипа */
+    padding: 0 5px 5px; /* Нижний отступ для размещения длительности */
+}
+
+.track-content {
+    position: absolute;
+    left: 70px; /* Отступ под лейбл */
+    right: 0;
+    top: 0;
+    bottom: 0;
+    overflow-x: visible;
+}
+
+.timeline-clip {
+    user-select: none;
+    touch-action: none;
+}
+
+.timeline-clip.dragging {
+    opacity: 0.85; /* Меньше прозрачность при перетаскивании клипа */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.timeline-scrollable {
+    width: max-content;
+    min-width: 100%;
+    position: relative;
+}
+
+/* Маркеры времени на линейке */
+.time-mark {
+    position: absolute;
+    height: 100%;
+    width: 1px;
+    background-color: #2a2a2a; /* Темнее цвет маркеров времени */
+    top: 0;
+}
+
+.time-mark.major {
+    height: 60%; /* Меньше высота основных маркеров */
+    background-color: #444; /* Цвет основных маркеров времени */
+}
+
+.time-mark.major span {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px; /* Меньше размер шрифта меток времени */
+    color: #666; /* Цвет меток времени */
+    margin-top: 2px;
+}
+
+/* Дополнительные стили (полноэкранный режим, маркер слайдов, контекстное меню) - без изменений, если не требуется */
+.fullscreen-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Скрыть части изображения, выходящие за пределы */
+}
+
+.fullscreen-container.hiding {
+    animation: fadeOut 0.5s ease-out forwards;
+}
+
+.fullscreen-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.media-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: blur(20px) brightness(1.2);
+    opacity: 0.7;
+    z-index: 1;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.05);
+}
+
+.media-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    animation: contentScale 0.5s ease-out;
+}
+
+.slide-info {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    font-size: 24px;
+    background: rgba(0,0,0,0.7);
+    padding: 5px 15px;
+    border-radius: 5px;
+    animation: slideInfoAppear 0.5s ease-out;
+}
+
+@keyframes slideInfoAppear {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.slide-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px; /* Тоньше маркер слайда */
+    background-color: #ff8a00; /* Более приглушенный оранжевый цвет */
+    cursor: col-resize;
+    z-index: 10;
+    height: 200%;
+    transition: all 0.2s;
+}
+
+.slide-marker:hover {
+    width: 4px; /* Увеличение при наведении */
+    background-color: #ffa500; /* Светлее при наведении */
+}
+
+.slide-marker.snap-active {
+    background: #ff6a00;
+    width: 4px;
+}
+
+.slide-marker-label {
+    position: absolute;
+    top: -15px; /* Выше лейбл маркера слайда */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ff8a00; /* Цвет фона лейбла */
+    color: white;
+    padding: 2px 6px; /* Меньше отступы в лейбле */
+    border-radius: 3px; /* Меньше скругление лейбла */
+    font-size: 11px; /* Меньше размер шрифта лейбла */
+    white-space: nowrap;
+}
+
+.context-menu {
+    position: absolute;
+    background-color: #1a1a1a; /* Темнее фон контекстного меню */
+    border: 1px solid #333;
+    border-radius: 5px; /* Меньше скругление контекстного меню */
+    padding: 6px 0; /* Меньше вертикальные отступы */
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.menu-item {
+    padding: 6px 14px; /* Меньше отступы в пунктах меню */
+    color: #ccc;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9em; /* Меньше размер шрифта в пунктах меню */
+}
+
+.menu-item:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+/* Панель скринсейверов */
+/* ... (предыдущие стили остаются без изменений) ... */
+
+/* Панель скринсейверов */
+.screensaver-panel-container {
+    width: 280px; /* Немного увеличена ширина */
+    height: 400px; /* Увеличена высота */
+    background: rgba(20, 20, 20, 0.9); /* Фон в стиле глассморфизма */
+    border-left: 1px solid rgba(50, 50, 50, 0.5); /* Более светлая и тонкая граница */
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px; /* Скругление углов контейнера */
+    overflow: hidden; /* Обрезка содержимого по границам */
+    backdrop-filter: blur(10px); /* Глассморфизм */
+    -webkit-backdrop-filter: blur(10px); /* Для Safari */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Тень для глубины */
+    margin-left: 20px; /* Отступ слева от основного контента, если панель расположена справа */
+}
+
+.screensaver-panel-header {
+    padding: 15px;
+    background: rgba(25, 25, 25, 0.8); /* Темнее фон заголовка */
+    border-bottom: 1px solid rgba(50, 50, 50, 0.5); /* Более светлая и тонкая граница */
+    font-size: 1.1em; /* Немного увеличен размер шрифта */
+    color: #bbb; /* Цвет текста заголовка */
+    text-align: center; /* Центрирование текста заголовка */
+    letter-spacing: 0.5px; /* Небольшое межбуквенное расстояние */
+}
+
+.screensaver-panel {
+    flex-grow: 1;
+    padding: 15px; /* Увеличены внутренние отступы панели */
+    overflow-y: auto; /* Добавлена вертикальная прокрутка */
+    display: grid;
+    max-height: none; /* Убрано ограничение максимальной высоты, чтобы flex-grow работал */
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); /* Адаптивные колонки, минимальный размер элемента */
+    gap: 12px; /* Увеличены отступы между элементами */
+}
+
+.screensaver-item {
+    position: relative;
+    aspect-ratio: 1;
+    background: #252525; /* Темнее фон элементов скринсейвера */
+    border-radius: 8px; /* Скругление углов элементов */
+    cursor: pointer; /* Курсор "перемещение" */
+    transition: transform 0.2s, box-shadow 0.2s; /* Добавлена тень в transition */
+    border: 1px solid rgba(50, 50, 50, 0.3); /* Добавлена тонкая граница */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Добавлена тень для глубины */
+}
+
+.screensaver-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: opacity 0.3s ease-in-out; /* Плавная смена прозрачности */
+}
+
+.screensaver-item:hover {
+    transform: scale(1.05); /* Увеличение при наведении */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); /* Усиление тени при наведении */
+}
+
+.screensaver-item:hover img {
+    opacity: 0.9; /* Небольшое затемнение изображения при наведении */
+}
+
+/* Панель инструментов генерации */
+.generation-panel-container {
+    background: rgba(20, 20, 20, 0.9);
+    margin-top: 13px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(50, 50, 50, 0.5);
+    flex-direction: row;
+    display: flex;
+    align-self: flex-start;
+}
+
+.generation-panel-header {
+    padding: 15px;
+    background: rgba(25, 25, 25, 0.8);
+    border-right: 1px solid rgba(50, 50, 50, 0.5);
+    color: #bbb;
+    text-align: center;
+    font-size: 1.1em;
+    padding-top: 30px;
+}
+
+.generation-panel {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.generate-btn {
+    background-color: rgba(30, 30, 30, 0.9); /* Фон с легким эффектом глассморфизма */
+    backdrop-filter: blur(10px); /* Эффект размытия фона */
+    -webkit-backdrop-filter: blur(10px); /* Для Safari */
+    border: 1px solid rgba(50, 50, 50, 0.5); /* Более тонкая граница */
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #bbb;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.generate-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Модальное окно генерации */
+.generation-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.generation-modal-content {
+    background: rgba(30, 30, 30, 0.95);
+    width: 600px;
+    border-radius: 15px;
+    padding: 25px;
+    transform: scale(0.8);
+    opacity: 0;
+    border: 1px solid rgba(90, 90, 90, 0.3);
+}
+
+.generation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.generation-header h2 {
+    color: #bbb;
+    font-style: normal;
+    margin: 0;
+}
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-modal-btn:hover {
+    color: #4A6DA7FF;
+}
+
+#promptInput {
+    width: 94%;
+    height: 100px;
+    background: rgba(40, 40, 40, 0.8);
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+    color: white;
+    margin-bottom: 20px;
+    resize: none;
+    transition: all ease 0.5s;
+}
+
+#promptInput:focus {
+    outline: none;
+    border: 2px solid #4a6da7;
+}
+
+.settings-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.settings-row label {
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#styleSelect {
+    background: #252525;
+    border: 1px solid #333;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.preview-container {
+    background: #151515;
+    border-radius: 10px;
+    height: 300px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.loading-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 12px;
+}
+
+.flux-particle {
+    width: 15px;
+    height: 15px;
+    background: #4a6da7;
+    border-radius: 50%;
+    animation: flux-pulse 1.2s infinite;
+}
+
+@keyframes flux-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.4); opacity: 1; }
+}
+
+.generate-final-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #4a6da7 0%, #4a6da7 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    transition: filter 0.2s;
+}
+
+.save-btn {
+    width: 51px;
+    padding: 9.5px;
+    background: #666;;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 1.5em;
+    transition: all 0.2s;
+}
+
+.save-btn:hover {
+    background: #57a777;
+    scale: 1.05;
+}
+
+.generate-final-btn:hover {
+    filter: brightness(1.1);
+}
+
+.preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.error-message {
+    color: #c43838;
+    text-align: center;
+    padding: 20px;
+}
