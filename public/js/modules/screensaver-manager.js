@@ -59,7 +59,7 @@ class ScreenSaverManager {
         });
 
         try {
-            const response = await fetch('http://localhost:3001/api/generate-image', {
+            const response = await fetch('https://stagemaster.up.railway.app/api/generate-image', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
