@@ -40,6 +40,7 @@ class ScreenSaverManager {
 
     async startGeneration() {
         const prompt = document.getElementById('promptInput').value;
+        this.removeAllClickListeners(document.getElementById('saveGenerationBtn'))
 
         const preview = document.getElementById('previewContainer');
         preview.classList.add('generating');
@@ -92,7 +93,6 @@ class ScreenSaverManager {
                     url: img,
                     type: 'image'
                 });
-                this.removeAllClickListeners(document.getElementById('saveGenerationBtn'))
             });
         } catch (error) {
             alert(`Ошибка генерации: ${error.message}`);
