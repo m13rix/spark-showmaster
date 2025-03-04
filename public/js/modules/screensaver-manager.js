@@ -84,22 +84,27 @@ class ScreenSaverManager {
             preview.innerHTML = '';
             preview.appendChild(img);
 
-            document.getElementById('saveGenerationBtn').addEventListener('click', this.handleClickOnce.bind(this));
+            document.getElementById('saveGenerationBtn').addEventListener('click', () => {
+                const img = this.generatedImage;
+                // Сохраняем в библиотеку
+                this.addToLibrary({
+                    id: `gen-${Date.now()}`,
+                    url: img,
+                    type: 'image'
+                });
+                this.removeAllClickListeners(document.getElementById('saveGenerationBtn'))
+            });
         } catch (error) {
             alert(`Ошибка генерации: ${error.message}`);
         } finally {
             preview.classList.remove('generating');
         }
     }
-    handleClickOnce() {
-        const img = this.generatedImage;
-        // Сохраняем в библиотеку
-        this.addToLibrary({
-            id: `gen-${Date.now()}`,
-            url: img,
-            type: 'image'
-        });
-        document.getElementById('saveGenerationBtn').removeEventListener('click', this.handleClickOnce);
+
+    removeAllClickListeners(element) {
+        const newElement = element.cloneNode(true); // Клонируем элемент, true - для глубокого клонирования (с дочерними элементами)
+        element.parentNode.replaceChild(newElement, element); // Заменяем старый элемент новым
+        return newElement; // Возвращаем ссылку на новый элемент (если нужно)
     }
 
     addToLibrary(imageData) {
