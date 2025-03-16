@@ -68,6 +68,99 @@ app.post('/api/generate-image', async (req, res) => {
     }
 });
 
+function extractJSON(str) {
+    const openBrackets = ['{', '['];
+    const closeBrackets = ['}', ']'];
+
+    // Ищем первую открывающую скобку
+    let startIndex = -1;
+    for (let i = 0; i < str.length; i++) {
+        if (openBrackets.includes(str[i])) {
+            startIndex = i;
+            break;
+        }
+    }
+
+    if (startIndex === -1) return null;
+
+    const stack = [];
+    let inString = false;
+    let escape = false;
+    let endIndex = startIndex;
+    const targetBracket = closeBrackets[openBrackets.indexOf(str[startIndex])];
+
+    for (let i = startIndex; i < str.length; i++) {
+        const char = str[i];
+
+        if (escape) {
+            escape = false;
+            continue;
+        }
+
+        if (char === '\\') {
+            escape = true;
+            continue;
+        }
+
+        if (char === '"') {
+            inString = !inString;
+            continue;
+        }
+
+        if (!inString) {
+            if (char === openBrackets[0] || char === openBrackets[1]) {
+                stack.push(char);
+            }
+            else if (char === closeBrackets[0] || char === closeBrackets[1]) {
+                stack.pop();
+                if (stack.length === 0 && char === targetBracket) {
+                    endIndex = i + 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    try {
+        return JSON.parse(str.slice(startIndex, endIndex));
+    } catch (e) {
+        return null;
+    }
+}
+
+app.post('/api/generate-item', async (req, res) => {
+    try {
+        const { prompt } = req.body;
+
+        // Генерация промпта через Gemini
+        const chatSession = model.startChat({
+            generationConfig: {
+                temperature: 1,
+                topP: 0.95,
+                topK: 40,
+                maxOutputTokens: 8192,
+                responseMimeType: "text/plain",
+            },
+        });
+
+        const geminiResponse = await chatSession.sendMessage(
+            `Создайте предмет из следующих предметов:\n${prompt}`
+        );
+
+        const responseJson = extractJSON(geminiResponse.response.text());
+        console.log(responseJson)
+
+        res.json(responseJson);
+
+    } catch (error) {
+        console.error('Generation error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Ошибка генерации изображения'
+        });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
