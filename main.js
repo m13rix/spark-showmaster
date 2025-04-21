@@ -354,7 +354,7 @@ async function generateTexture(prompt = "", twoHanded = false){
     await sharp(processedImage).toFile(path.join(uploadDir, filename));
 
     // Генерация короткой ссылки
-    const shortUrl = `http://localhost:${port}/image/${filename}`;
+    const shortUrl = `https://stagemaster.up.railway.app/image/${filename}`;
     console.log(shortUrl)
     return shortUrl;
 }
