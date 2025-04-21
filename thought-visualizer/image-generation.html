@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Image Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            margin-top: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Генератор изображений по тексту</h1>
+
+    <div class="input-group">
+        <textarea id="prompt" placeholder="Введите описание изображения..."></textarea>
+    </div>
+
+    <button onclick="generateImage()">Сгенерировать изображение</button>
+
+    <div class="loading" id="loading">
+        Генерация изображения...
+    </div>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    async function generateImage() {
+        const prompt = document.getElementById('prompt').value;
+        const resultDiv = document.getElementById('result');
+        const loading = document.getElementById('loading');
+
+        if (!prompt) {
+            alert('Пожалуйста, введите описание изображения');
+            return;
+        }
+
+        try {
+            loading.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            const response = await fetch('http://localhost:3000/generate-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Ошибка генерации');
+            }
+
+            // Получаем бинарные данные
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.className = 'generated-image';
+            resultDiv.appendChild(img);
+
+        } catch (error) {
+            console.error('Error:', error);
+            resultDiv.innerHTML = `Ошибка: ${error.message}`;
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>

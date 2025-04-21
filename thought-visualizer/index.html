@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime Subtitles</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f0f0f0;
+        }
+
+        #hiddenText {
+            opacity: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .subtitles {
+            position: fixed;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 80%;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 8px;
+            font-size: 24px;
+            text-align: center;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+
+        #status {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<!-- Скрытое поле для полного текста -->
+<textarea id="hiddenText"></textarea>
+
+<!-- Контейнер для субтитров -->
+<div class="subtitles" id="subtitles"></div>
+
+<!-- Панель управления -->
+<div class="controls">
+    <button id="toggleButton">Start Subtitles</button>
+    <div id="status">Status: Inactive</div>
+</div>
+
+<!-- Подключаем библиотеку через CDN -->
+<script type="module">
+    import SpeechToElement from 'https://cdn.jsdelivr.net/gh/ovidijusparsiunas/speech-to-element@master/component/bundle/index.min.js';
+
+    const hiddenText = document.getElementById('hiddenText');
+    const subtitles = document.getElementById('subtitles');
+    const toggleButton = document.getElementById('toggleButton');
+    const status = document.getElementById('status');
+
+    let isRecording = false;
+    let lastFinalText = '';
+
+    // Функция для извлечения последнего предложения
+    const getLastSentence = (text) => {
+        const sentences = text.split(/(?=[А-ЯA-Z])/); // Разделение по заглавным буквам
+        return sentences.length > 1 ? sentences[sentences.length - 1] : text;
+    };
+
+    // Настройки распознавания
+    const options = {
+        element: hiddenText,
+        displayInterimResults: true,
+        language: 'ru-RU', // Язык распознавания
+        textColor: { interim: 'transparent', final: 'transparent' },
+        onResult: (text, isFinal) => {
+            if (isFinal) {
+                lastFinalText = hiddenText.value + ' ';
+                hiddenText.value = lastFinalText + text;
+                subtitles.textContent = getLastSentence(text);
+            } else {
+                const fullText = lastFinalText + text;
+                const currentSentence = getLastSentence(fullText);
+                subtitles.textContent = currentSentence;
+            }
+        },
+        onStart: () => {
+            isRecording = true;
+            status.textContent = 'Status: Recording...';
+            toggleButton.textContent = 'Stop Subtitles';
+            subtitles.style.opacity = '1';
+        },
+        onStop: () => {
+            isRecording = false;
+            status.textContent = 'Status: Inactive';
+            toggleButton.textContent = 'Start Subtitles';
+            subtitles.style.opacity = '0';
+            hiddenText.value = '';
+            lastFinalText = '';
+        },
+        onError: (error) => {
+            console.error('Error:', error);
+            status.textContent = 'Error: ' + error;
+        }
+    };
+
+    // Обработчик кнопки
+    toggleButton.addEventListener('click', () => {
+        SpeechToElement.toggle('webspeech', options);
+    });
+
+    // Инициализация скрытого текстового поля
+    hiddenText.value = '';
+</script>
+</body>
+</html>
