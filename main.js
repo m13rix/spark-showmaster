@@ -330,8 +330,7 @@ async function checkItems(prompt = "", items = "нет предметов") {
 }
 
 async function generateTexture(prompt = "", twoHanded = false){
-    let finalPrompt = "Pixel art of a detailed " + prompt + ", centered on a pure white background. detailed in 8-bit or 16-bit style, no shadows";
-    if (twoHanded) finalPrompt = "a centered, a " + prompt + " pointing forward, viewed from a first-person perspective. No hands or characters visible. Clean white background. High-resolution sprite suitable for game development. Pixelated"
+    let finalPrompt = "beautiful 16x16 Minecraft Pixel art of a " + prompt + ", centered on a pure white background. detailed in 8-bit or 16-bit style, no shadows, minecraft style, facing up and left";
     // Генерация изображения через FLUX
     const fluxResponse = await together.images.create({
         model: "black-forest-labs/FLUX.1-schnell",
@@ -372,10 +371,11 @@ app.post('/api/generate-item', async (req, res) => {
 
         //initialResponse["Success"] ===
         if (true) {
-            const mainResponse = await invokeMainModel(prompt)
+            let mainResponse = await invokeMainModel(prompt)
             console.log(mainResponse)
 
             responseJson = extractJSON(mainResponse);
+            mainResponse["two_handed"] = false;
             console.log(responseJson)
             if (responseJson["base"] === "custom") {
                 const textureUrl = await generateTexture(responseJson["texture"], responseJson["two_handed"]);
