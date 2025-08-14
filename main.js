@@ -416,7 +416,7 @@ app.post('/api/generate-item', async (req, res) => {
         console.log('[generate-item] prompt:', prompt);
 
         // Шаг 0: Проверяем предметы
-        const itemsResponse = checkItems(prompt, items);
+        const itemsResponse = await checkItems(prompt, items);
         const itemsJson = extractJSON(itemsResponse);
         const areItemsValid = itemsJson["Success"]
         if (areItemsValid === false) {
