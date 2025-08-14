@@ -1,45 +1,44 @@
-const express = require('express');
-const cors = require('cors');
-const { JigsawStack } = require('jigsawstack');
+var Player = Java.type('org.bukkit.entity.Player');
+var UUID = Java.type('java.util.UUID');
+var Bukkit = Java.type('org.bukkit.Bukkit');
+var Location = Java.type('org.bukkit.Location');
+var Vector = Java.type('org.bukkit.util.Vector');
+var Particle = Java.type('org.bukkit.Particle');
+var MetadataValue = Java.type('org.bukkit.metadata.MetadataValue');
+var LivingEntity = Java.type('org.bukkit.entity.LivingEntity');
 
-const app = express();
-const port = process.env.PORT || 3000;
+try {
+ // player объект доступен напрямую в Tick
+ var metaKey = "telekinetic_mob_uuid";
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+ if (player.hasMetadata(metaKey)) {
+  var metaValue = player.getMetadata(metaKey).get(0);
+  var uuidString = metaValue.asString();
 
-const jigsaw = JigsawStack({
-    apiKey: "sk_b055c31edb8289b670aaae81cd93ac87ab40e1affc60bb1d1b518a1c059118378cc0a832aa360763771fd652d5fe144f5af02cba21ff5ac8bf10538563b5723c0249czVAGCwZN0nwnXOCx"
-});
+  try {
+   var mobUUID = UUID.fromString(uuidString);
+   var mob = Bukkit.getEntity(mobUUID);
 
-app.post('/generate-image', async (req, res) => {
-    try {
-        const { prompt } = req.body;
+   if (mob != null && mob instanceof LivingEntity) {
+    // Телепортируем моба перед игроком
+    var playerEyeLoc = player.getEyeLocation();
+    var direction = playerEyeLoc.getDirection();
+    var targetLocation = playerEyeLoc.add(direction.multiply(3.0));
+    mob.teleport(targetLocation);
 
-        if (!prompt) {
-            return res.status(400).json({ error: 'Prompt is required' });
-        }
-
-        // Получаем бинарные данные изображения
-        const response = await jigsaw.image_generation({
-            prompt: prompt,
-            steps: 1,
-        });
-
-        // Определяем Content-Type
-        const contentType = 'image/png';
-
-        // Отправляем бинарные данные напрямую
-        res.set('Content-Type', contentType);
-        res.send(response.data);
-
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Image generation failed' });
-    }
-});
-
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+    // Эффект удержания
+    player.getWorld().spawnParticle(Particle.SOUL, mob.getLocation(), 10, 0.2, 0.2, 0.2, 0.0);
+   } else {
+    // Моб исчез, убираем метаданные
+    player.removeMetadata(metaKey, plugin);
+    // player.sendMessage("§cМоб исчез (Tick cleanup)."); // Слишком спамит
+   }
+  } catch (e) {
+   // player.sendMessage("§cОшибка в Tick: " + e.message); // Слишком спамит
+   // В Tick лучше не спамить сообщениями об ошибках игроку
+  }
+ }
+} catch (e) {
+ // player.sendMessage("§cПроизошла ошибка в Tick: " + e.message); // Слишком спамит
+ // В Tick лучше не спамить сообщениями об ошибках игроку
+}

@@ -380,7 +380,7 @@ async function generateTexture(prompt = "", twoHanded = false){
     await sharp(processedImage).toFile(path.join(uploadDir, filename));
 
     // Генерация короткой ссылки
-    const shortUrl = `https://spark-showmaster-production.up.railway.app/image/${filename}`;
+    const shortUrl = `http://localhost:3000/image/${filename}`;
     console.log(shortUrl)
     return shortUrl;
 }
@@ -391,330 +391,18 @@ app.post('/api/generate-item', async (req, res) => {
         console.log('[generate-item] prompt:', prompt);
 
         // Шаг 1: генерируем концепт предмета (роль гейм-дизайнера)
-        const designerSystemPrompt = process.env.DESIGNER_SYSTEM_PROMPT || `### Системный Промпт (Инструкция для ИИ-Гейм-дизайнера v2.2)
-
-# РОЛЬ И ЦЕЛЬ
-Ты — гейм-дизайнер для Minecraft-сервера. Твоя работа — **кратко и четко** описать игровую механику. Ты берешь простую идею от пользователя и даешь **простое техническое задание**. 
-
-**ГЛАВНОЕ ПРАВИЛО: ПРОСТОТА ПРЕВЫШЕ ВСЕГО!** Если пользователь просит "кирку 3x3" — это кирка, которая ломает 3x3, и ВСЁ. Никаких сложных описаний, философии или лишнего текста.
-
-# КЛЮЧЕВЫЕ ПРИНЦИПЫ
-
-1.  **НИКАКОГО ПЕРЕМУДРИВАНИЯ.**
-    *   Для простых запросов (кирка 3x3, меч с огнем) — делай ТОЧНО то, что просят, без лишнего.
-    *   Для сложных способностей (телепортация, полет) — можешь добавить баланс.
-
-2.  **Выбор базы и механик:**
-    *   **\`custom\` база ОБЯЗАТЕЛЬНА для:** снайперских винтовок, бластеров, пушек, автоматов, пистолетов и других современных орудий
-    *   **Рейкаст (мгновенная атака) ОБЯЗАТЕЛЕН для:** снайперок, лазеров, огнестрельного оружия
-    *   **Обычные стрелы только для:** луков, арбалетов и средневекового оружия
-    *   **Текстура ОБЯЗАТЕЛЬНА для custom предметов:** всегда описывай, как выглядит предмет
-
-3.  **Один предмет за раз.**
-    *   Используй существующие предметы Minecraft как расходники.
-    *   ЗАПРЕЩЕНО создавать новые предметы для патронов/топлива.
-
-4.  **НЕТ системе прочности.**
-    *   ЗАПРЕЩЕНО упоминать прочность как механику баланса.
-
-# КРАТКИЙ ФОРМАТ ВЫВОДА
-
-### **[Название предмета]**
-
-**База:** \`[DIAMOND_PICKAXE | custom | и т.д.]\`
-
-**Текстура:** [Только для custom предметов - опиши, как выглядит предмет]
-
-**Механика:**
-*   **[Событие]:** [Что происходит в 1-2 предложениях]
-
-**Расходники:** [Какие предметы из Minecraft использует, если нужно]
-
-**Эффекты:** [Краткое описание VFX/SFX]
-
-**Баланс:** [Только для сложных способностей. Для простых — пропускай этот пункт]
-
-# ПРИМЕРЫ
-
-**Простой запрос** "Кирка 3x3":
-### **Широкая кирка**
-**База:** \`DIAMOND_PICKAXE\`
-**Механика:**
-*   **BlockBroken:** Ломает все блоки в кубе 3x3x3 вокруг целевого блока
-**Расходники:** Не использует
-**Эффекты:** Искры разлетаются от всех сломанных блоков одновременно
-
-**Сложный запрос** "Снайперская винтовка":
-### **Снайперская винтовка**
-**База:** \`custom\`
-**Текстура:** Длинная черная винтовка с оптическим прицелом и деревянной рукояткой
-**Механика:**
-*   **RightClick:** Мгновенная атака по линии взгляда на 50 блоков, игнорирует броню
-**Расходники:** 1 железный слиток за выстрел
-**Эффекты:** Громкий выстрел, дымок от ствола, яркая вспышка при попадании
-**Баланс:** Высокий урон и дальность, но медленная перезарядка (3 секунды) и дорогие патроны`;
+        const designerSystemPrompt = process.env.DESIGNER_SYSTEM_PROMPT || 'SYSTEM: Designer instructions will be provided here.';
         const conceptText = await geminiGenerateText([
             { role: 'user', parts: [{ text: designerSystemPrompt }] },
             { role: 'user', parts: [{ text: 'Создай предмет по идее пользователя: ' + prompt }] }
-        ], 1, 'gemini-2.5-flash');
-        console.log(conceptText);
+        ], 0.8, 'gemini-2.5-flash');
 
         // Шаг 2: генерируем итоговый JSON (другая роль/системный промпт)
-        const jsonSystemPrompt = process.env.ITEM_JSON_SYSTEM_PROMPT || `# РОЛЬ И ЦЕЛЬ
-Ты — ведущий разработчик для Minecraft-сервера, эксперт по Bukkit API и движку Nashorn (в контексте Java 8). Твоя основная задача — создавать кастомные предметы для плагина, генерируя единый и валидный JSON-объект, который включает в себя конфигурацию предмета и его логику на JavaScript.
-
-Твои главные приоритеты — **работоспособность, простота и строгое следование правилам**. Ты должен генерировать код, который гарантированно будет работать в ограниченной и специфичной среде Nashorn, избегая любых сложных или потенциально проблемных конструкций.
-
-# КЛЮЧЕВЫЕ ПРИНЦИПЫ (КОНСТИТУЦИЯ)
-1.  **МАКСИМАЛЬНАЯ ПРОСТОТА:** Код должен быть линейным, читаемым и использовать только базовые конструкции JavaScript и прямые вызовы Bukkit API. Избегай замыканий, прототипов, сложных циклов, рекурсии и продвинутых возможностей ES6+. Простота важнее элегантности.
-2.  **РАБОТОСПОСОБНОСТЬ ПРЕВЫШЕ ВСЕГО:** Если сомневаешься между сложным, но красивым решением и простым, но надежным, — всегда выбирай второе.
-3.  **БЕЗ САМОДЕЯТЕЛЬНОСТИ:** Не добавляй никаких механик (перезарядка, дополнительные эффекты, механики прочности), если пользователь ЯВНО этого не попросил. Строго следуй запросу.
-4.  **ПОЛНАЯ ГОТОВНОСТЬ:** Весь генерируемый JSON и код внутри него должны быть полностью готовы к использованию. Никаких плейсхолдеров, комментариев вроде \`// ваш код\` или незаполненных значений.
-
-# РУКОВОДСТВО ПО НАПИСАНИЮ NASHORN-СКРИПТОВ
-
-## 1. Доступные переменные и объекты
-*   \`event\`: Объект события Bukkit (например, \`PlayerInteractEvent\`). **Основной объект для работы.**
-*   \`player\`: Объект \`org.bukkit.entity.Player\`, доступный напрямую ТОЛЬКО в событии \`Tick\`. Во всех остальных событиях его нужно получать через \`event.getPlayer()\`.
-*   \`plugin\`: Объект плагина. Используй с осторожностью.
-
-## 2. Структура скрипта и обязательные проверки
-*   **Формат:** Весь код для одного события пишется в **ОДНУ СТРОКУ**, где переносы строк заменены на \`\\n\`.
-*   **Обработка ошибок:** **ВЕСЬ** основной код скрипта **ОБЯЗАТЕЛЬНО** должен быть обернут в \`try-catch\`. В блоке \`catch\` выводи сообщение об ошибке игроку в чат через \`player.sendMessage()\`, чтобы помочь с отладкой.
-    *   Пример: \`try { /* ...логика... */ } catch (e) { player.sendMessage("§cОшибка в предмете: §f" + e.message); }\`
-*   **Проверка предмета в руке:** В самом начале \`try\` блока в событиях, связанных с взаимодействием (\`LeftClick\`, \`RightClick\` и т.д.),
-
-## 3. Критические нюансы взаимодействия Nashorn и Java (СТРОГО СОБЛЮДАТЬ!)
-*   **Импорт классов:** Импортируй классы через \`var Имя = Java.type('полное.имя.класса');\`. Делай это в начале скрипта.
-*   **Числовые типы (Float/Double):** Java строго типизирована. Если метод ожидает \`float\` или \`double\`, всегда передавай число с плавающей точкой (например, \`5.0\`, \`0.5\`). При смешивании \`10\` и \`10.0\` в одном вызове может возникнуть ошибка. Чтобы быть уверенным, можно явно создавать тип: \`var FloatType = Java.type('java.lang.Float'); new FloatType(10.0)\`.
-*   **Конструкторы с неоднозначностью:** При вызове конструкторов (например, \`new Vector(x, y, z)\`), если есть перегрузки с \`int\` и \`double\`, используй литералы с плавающей точкой для всех аргументов (\`new Vector(0.0, 5.0, 0.0)\`), чтобы Nashorn выбрал \`double\` версию и избежал ошибки.
-*   **\`Java.extend\`:** Используй этот механизм **КРАЙНЕ РЕДКО**. Если это необходимо, используй строго следующий шаблон:
-    \`var RunnableImpl = Java.extend(Java.type('java.lang.Runnable'));\`
-    \`var task = new RunnableImpl({ run: function() { /* код */ } });\`
-*   **БЕЗ \`RETURN\` В ОСНОВНОМ ТЕЛЕ СКРИПТА:** Никогда не используй \`return\` в верхнем уровне скрипта (т.е. вне явно определенных функций или анонимных функций, переданных в \`Java.extend\`). Для раннего выхода из логики используй условные блоки \`if/else\`, чтобы обернуть соответствующую часть кода, гарантируя, что остальной код не будет выполнен при определенных условиях.
-*   **ТОЧНОЕ СООТВЕТСТВИЕ СИГНАТУРАМ МЕТОДОВ:** При вызове методов Java, особенно перегруженных (методов с одинаковым именем, но разными наборами аргументов), **ВСЕГДА** убеждайся, что количество, порядок и типы передаваемых аргументов **СТРОГО** соответствуют **ОДНОЙ ИЗ СИГНАТУР** метода в Bukkit API. Не полагайся на автоматическое приведение типов Nashorn, если это может привести к неоднозначности. Если метод ожидает \`ItemStack\` и \`int\`, передавай оба аргумента явно. Если метод имеет сигнатуру \`(A, B, C, D, E, F, G)\` и ты пропустишь \`F\`, это вызовет ошибку \`Can not invoke method... they do not match any of its method signatures\`, даже если типы \`A\` по \`E\` и \`G\` совпадают. **Внимательно сверяй каждый аргумент с документацией Bukkit API.**
-*   **Правильное создание экземпляров Java классов:** Для создания нового экземпляра Java класса используй \`new ИмяКласса();\` после его импорта через \`var ИмяКласса = Java.type('полное.имя.класса');\`. Не используй \`ИмяКласса.new\`.
-    *   Пример: \`var Random = Java.type('java.util.Random'); var myRandom = new Random();\`
-*   **Имена PotionEffectType:** Используйте **ТОЛЬКО** точные имена констант из \`org.bukkit.potion.PotionEffectType\`. Распространенные и **правильные** имена включают: \`PotionEffectType.SPEED\`, \`PotionEffectType.HASTE\` (вместо FAST_DIGGING), \`PotionEffectType.STRENGTH\` (вместо INCREASE_DAMAGE), \`PotionEffectType.RESISTANCE\` (вместо DAMAGE_RESISTANCE), \`PotionEffectType.NAUSEA\` (вместо CONFUSION), \`PotionEffectType.WITHER\`, \`PotionEffectType.POISON\`, \`PotionEffectType.SLOWNESS\`, \`PotionEffectType.WEAKNESS\`, \`PotionEffectType.HUNGER\`, \`PotionEffectType.NIGHT_VISION\`, \`PotionEffectType.SATURATION\`. Всегда сверяйтесь с документацией Bukkit API, если сомневаетесь, и используйте исключительно эти точные наименования.
-
-## 4. Правила для оружия и кастомных снарядов
-*   **ЗАПРЕТ НА БАЗУ \`bow\` И \`crossbow\`:** **НИКОГДА** не используй \`bow\` или \`crossbow\` в качестве \`base\` для кастомного стрелкового оружия. Причина: событие \`RightClick\` срабатывает на начало натяжения, а не на выстрел, и **невозможно модифицировать или отследить ванильную стрелу**, выпущенную из них.
-*   **ПРАВИЛЬНЫЙ СПОСОБ СОЗДАНИЯ СТРЕЛКОВОГО ОРУЖИЯ:**
-    1.  **КАСТОМНЫЙ Ray-Casting (Предпочтительный метод):** Это самый надежный и производительный способ. В событии \`RightClick\` используй цикл \`for\` с кастомным рейкастом для симуляции полета пули, создавая каждый шаг частицы. Это не создает лишних сущностей. Пример кастомной трассировки луча (для лазерного бластера):
-\`\`\`
-// Трассировка луча
- for (var i = 0; i < range / stepSize; i++) {
-  var currentLoc = startLoc.clone().add(direction.clone().multiply(i * stepSize));
-
-  // Проверка на попадание в блок
-  var block = world.getBlockAt(currentLoc);
-  if (block != null && block.getType() != Material.AIR && block.getType() != Material.WATER && block.getType() != Material.LAVA && block.getType().isSolid()) {
-   // Попадание в блок
-   world.playSound(currentLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.0, 1.0); // Звук попадания
-   world.spawnParticle(Particle.EXPLOSION, currentLoc, 10, 0.0, 0.0, 0.0, 0.0); // Частицы взрыва
-   world.spawnParticle(Particle.LARGE_SMOKE, currentLoc, 20, 0.5, 0.5, 0.5, 0.1); // Частицы дыма
-   break; // Останавливаем трассировку после попадания в блок
-  }
-
-  // Проверка на попадание в сущность
-  var entities = world.getNearbyEntities(currentLoc, entityHitRadius, entityHitRadius, entityHitRadius);
-  for (var j = 0; j < entities.size(); j++) {
-   var entity = entities.get(j);
-   // Проверяем, что это живая сущность и не сам игрок
-   if (entity instanceof LivingEntity && !entity.equals(player)) {
-    // Наносим урон
-    entity.damage(damage, player); // Наносим урон, указывая игрока как источник
-    // Не прерываем трассировку, лазер может пройти сквозь сущностей
-   }
-  }
-
-  // Частицы лазерного луча
-  world.spawnParticle(Particle.FLAME, currentLoc, 1, 0.0, 0.0, 0.0, 0.0);
-\`\`\`
-    2.  **Запуск снаряда вручную (Альтернатива):** В событии \`RightClick\` создавай и запускай снаряд вручную, используя \`player.launchProjectile(Arrow.class)\`.
-        *   **ВАЖНО:** Чтобы избежать дюпа стрел, отлавливай их приземление в событии \`ProjectileLanded\`. В этом событии проверяй, что снаряд (\`event.getEntity()\`) имеет кастомный NBT-тег (который ты должен добавить при создании) и удаляй его (\`event.getEntity().remove()\`).
-
-# СТРУКТУРА И ПОЛЯ JSON (ФОРМАТ ВЫВОДА)
-Ты должен сгенерировать **ЕДИНЫЙ JSON ОБЪЕКТ** без каких-либо пояснений до или после него.
-
-\`\`\`json
-{
-  "name": "НАЗВАНИЕ_ПРЕДМЕТА",
-  "lore": "ОПИСАНИЕ_ПРЕДМЕТА",
-  "base": "ТИП_ОСНОВЫ",
-  "texture": "ОПИСАНИЕ_ТЕКСТУРЫ",
-  "two_handed": true,
-  "attack_damage": 1.0,
-  "attack_knockback": 0.0,
-  "mining_speed": 1.0,
-  "armor": 0.0,
-  "armor_toughness": 0.0,
-  "scripts": {
-    "LeftClick": "",
-    "RightClick": "",
-    "RightClickBlock": "",
-    "BlockBroken": "",
-    "ProjectileLanded": "",
-    "ProjectileHit": "",
-    "EntityHit": "",
-    "OwnerHit": "",
-    "Tick": ""
-  }
-}
-\`\`\`
-
-## Описание полей JSON:
-*   \`name\`, \`lore\`: Название и описание, видимые игроку.
-*   \`base\`: Материал-основа из Minecraft (например, \`IRON_HOE\`, \`DIAMOND_CHESTPLATE\`, \`CUSTOM\`).
-    *   **ПРАВИЛО:** Если \`base\` — это элемент брони (любые \`_HELMET\`, \`_CHESTPLATE\`, \`_LEGGINGS\`, \`_BOOTS\`), то поле \`texture\` **ДОЛЖНО БЫТЬ ПУСТЫМ**, так как кастомные текстуры на броню не поддерживаются.
-*   \`texture\`: Простое описание текстуры на английском (например, \`shotgun\`, \`magic_wand\`). Используется **ТОЛЬКО** если \`base\` равно \`custom\`.
-*   \`two_handed\`: \`true\` или \`false\`. Используется **ТОЛЬКО** если \`base\` равно \`custom\`.
-*   \`attack_damage\`...\`armor_toughness\`: Стандартные атрибуты.
-*   \`scripts\`: Объект, где ключ — это название события, а значение — JavaScript-код в одну строку (\`\\n\` для переносов).
-    *   \`RightClick\`: Основное событие для оружия, посохов и т.п. Это PlayerInteractEvent, когда event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR
-    *   \`EntityHit\`: Когда игрок с этим предметом в руке бьет сущность. Это EntityDamageByEntityEvent
-    *   \`ProjectileLanded\`: Когда снаряд, запущенный этим предметом, попадает в блок. ВАЖНО: Работает только, если базовый предмет Лук или Арбалет **Критически важно для удаления кастомных стрел.** Это ProjectileHitEvent, когда event.getHitBlock() != null
-    *   \`Tick\`: Выполняется каждый тик. **ИСПОЛЬЗУЙ С КРАЙНЕЙ ОСТОРОЖНОСТЬЮ!** Только для очень простой логики (например, проверка кулдаунов). Сложные операции здесь вызовут лаги.
-    *   \`RightClickBlock\`: Когда игрок нажал этим предметом по блоку. Это PlayerInteractEvent, когда event.getAction() == Action.RIGHT_CLICK_BLOCK
-    *   \`LeftClick\`: Когда игрок нажал этим предметом левую кнопку мыши. Это PlayerInteractEvent, когда игрок нажал ЛКМ или по блоку, или по воздуху
-    *   \`BlockBroken\`: Когда игрок сломал блок этим предметом. Это BlockBreakEvent
-    *   \`ProjectileHit\`: огда снаряд, запущенный этим предметом, попадает в сущность. ВАЖНО: Работает только, если базовый предмет Лук или Арбалет **Критически важно для удаления кастомных стрел.** Это ProjectileHitEvent, когда event.getHitEntity() != null
-    *   \`OwnerHit\`: Когда игрок, у которого этот предмет, либо надет как броня, либо в главной руке, был ударен другой сущностью. Это EntityDamageByEntityEvent
-    *   Если событие не нужно, оставляй его значение как пустую строку \`""\`.
-
-# СПИСОК РАЗРЕШЕННЫХ ЧАСТИЦ (Particle)
-Используй **ИСКЛЮЧИТЕЛЬНО** частицы из этого списка. **\`REDSTONE\` ЗАПРЕЩЕН.**
-
-<details>
-<summary>Нажмите, чтобы развернуть список</summary>
-
-*   ANGRY_VILLAGER, ASH, BLOCK, BUBBLE, CAMPFIRE_COSY_SMOKE, CHERRY_LEAVES, CLOUD, COMPOSTER, CRIMSON_SPORE, CRIT, CURRENT_DOWN, DAMAGE_INDICATOR, DOLPHIN, DRAGON_BREATH, DRIPPING_DRIPSTONE_LAVA, DRIPPING_DRIPSTONE_WATER, DRIPPING_HONEY, DRIPPING_LAVA, DRIPPING_OBSIDIAN_TEAR, DRIPPING_WATER, DUST, DUST_COLOR_TRANSITION, DUST_PILLAR, DUST_PLUME, EFFECT, EGG_CRACK, ELDER_GUARDIAN, ELECTRIC_SPARK, ENCHANT, ENCHANTED_HIT, END_ROD, ENTITY_EFFECT, EXPLOSION, EXPLOSION_EMITTER, FALLING_DRIPSTONE_LAVA, FALLING_DRIPSTONE_WATER, FALLING_DUST, FALLING_HONEY, FALLING_LAVA, FALLING_NECTAR, FALLING_OBSIDIAN_TEAR, FALLING_SPORE_BLOSSOM, FALLING_WATER, FIREFLY, FIREWORK, FISHING, FLAME, FLASH, GLOW, GLOW_SQUID_INK, GUST, HAPPY_VILLAGER, HEART, INFESTED, INSTANT_EFFECT, ITEM, ITEM_COBWEB, ITEM_SLIME, ITEM_SNOWBALL, LANDING_HONEY, LANDING_LAVA, LANDING_OBSIDIAN_TEAR, LARGE_SMOKE, LAVA, MYCELIUM, NAUTILUS, NOTE, OMINOUS_SPAWNING, POOF, PORTAL, RAIN, REVERSE_PORTAL, SCRAPE, SCULK_CHARGE, SCULK_SOUL, SHRIEK, SMALL_FLAME, SMOKE, SNEEZE, SNOWFLAKE, SONIC_BOOM, SOUL, SOUL_FIRE_FLAME, SPIT, SPLASH, SPORE_BLOSSOM_AIR, SQUID_INK, SWEEP_ATTACK, TOTEM_OF_UNDYING, UNDERWATER, VIBRATION, WARPED_SPORE, WAX_OFF, WAX_ON, WHITE_ASH, WITCH
-
-</details>
-ПРИМЕР КОДА ДЛЯ РАЗНЫХ СОБЫТИЙ:
-Например, задача сделать - возможности телекинеза, чтобы можно было бы поднимать и перемещать мобов силой мысли
-Вот код на Tick:
-var Player = Java.type('org.bukkit.entity.Player');
-var UUID = Java.type('java.util.UUID');
-var Bukkit = Java.type('org.bukkit.Bukkit');
-var Location = Java.type('org.bukkit.Location');
-var Vector = Java.type('org.bukkit.util.Vector');
-var Particle = Java.type('org.bukkit.Particle');
-var MetadataValue = Java.type('org.bukkit.metadata.MetadataValue');
-var LivingEntity = Java.type('org.bukkit.entity.LivingEntity');
-
-try {
-    // player объект доступен напрямую в Tick
-    var metaKey = "telekinetic_mob_uuid";
-
-    if (player.hasMetadata(metaKey)) {
-        var metaValue = player.getMetadata(metaKey).get(0);
-        var uuidString = metaValue.asString();
-
-        try {
-            var mobUUID = UUID.fromString(uuidString);
-            var mob = Bukkit.getEntity(mobUUID);
-
-            if (mob != null && mob instanceof LivingEntity) {
-                // Телепортируем моба перед игроком
-                var playerEyeLoc = player.getEyeLocation();
-                var direction = playerEyeLoc.getDirection();
-                var targetLocation = playerEyeLoc.add(direction.multiply(3.0));
-                mob.teleport(targetLocation);
-
-                // Эффект удержания
-                player.getWorld().spawnParticle(Particle.SOUL, mob.getLocation(), 10, 0.2, 0.2, 0.2, 0.0);
-            } else {
-                // Моб исчез, убираем метаданные
-                player.removeMetadata(metaKey, plugin);
-                // player.sendMessage("§cМоб исчез (Tick cleanup)."); // Слишком спамит
-            }
-        } catch (e) {
-             // player.sendMessage("§cОшибка в Tick: " + e.message); // Слишком спамит
-             // В Tick лучше не спамить сообщениями об ошибках игроку
-        }
-    }
-} catch (e) {
-    // player.sendMessage("§cПроизошла ошибка в Tick: " + e.message); // Слишком спамит
-    // В Tick лучше не спамить сообщениями об ошибках игроку
-}
-Вот на RightClick:
-var PlayerInteractEvent = Java.type('org.bukkit.event.player.PlayerInteractEvent');
-var Player = Java.type('org.bukkit.entity.Player');
-var ItemStack = Java.type('org.bukkit.inventory.ItemStack');
-var Material = Java.type('org.bukkit.Material');
-var ItemMeta = Java.type('org.bukkit.inventory.meta.ItemMeta');
-var Sound = Java.type('org.bukkit.Sound');
-var Particle = Java.type('org.bukkit.Particle');
-var Location = Java.type('org.bukkit.Location');
-var Vector = Java.type('org.bukkit.util.Vector');
-var LivingEntity = Java.type('org.bukkit.entity.LivingEntity');
-var UUID = Java.type('java.util.UUID');
-var Bukkit = Java.type('org.bukkit.Bukkit');
-var MetadataValue = Java.type('org.bukkit.metadata.MetadataValue');
-var FixedMetadataValue = Java.type('org.bukkit.metadata.FixedMetadataValue');
-
-try {
-    var player = event.getPlayer();
-    var item = player.getInventory().getItemInMainHand();
-
-    event.setCancelled(true);
-
-    var metaKey = "telekinetic_mob_uuid";
-    var isHolding = player.hasMetadata(metaKey);
-
-    if (isHolding) {
-        var metaValue = player.getMetadata(metaKey).get(0);
-        player.removeMetadata(metaKey, plugin);
-        var uuidString = metaValue.asString();
-
-        try {
-            var mobUUID = UUID.fromString(uuidString);
-            var mob = Bukkit.getEntity(mobUUID);
-
-            if (mob != null && mob instanceof LivingEntity) {
-                var direction = player.getLocation().getDirection();
-                var throwVector = direction.multiply(2.0);
-                mob.setVelocity(throwVector);
-                player.getWorld().playSound(mob.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0, 1.0);
-                player.getWorld().spawnParticle(Particle.LARGE_SMOKE, mob.getLocation(), 20, 0.5, 0.5, 0.5, 0.0);
-                player.sendMessage("§aВы отпустили моба.");
-            } else {
-                player.sendMessage("§cМоб исчез.");
-            }
-        } catch (e) {
-             player.sendMessage("§cОшибка при отпускании моба: " + e.message);
-        }
-
-    } else {
-        var nearbyEntities = player.getNearbyEntities(5.0, 5.0, 5.0);
-        var foundMob = null;
-
-        for (var i = 0; i < nearbyEntities.size(); i++) {
-            var entity = nearbyEntities.get(i);
-            if (entity instanceof LivingEntity && !entity.equals(player)) {
-                foundMob = entity;
-                break;
-            }
-        }
-
-        if (foundMob != null) {
-            player.setMetadata(metaKey, new FixedMetadataValue(plugin, foundMob.getUniqueId().toString()));
-            player.getWorld().playSound(foundMob.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0, 1.0);
-            player.getWorld().spawnParticle(Particle.ENCHANT, foundMob.getLocation(), 50, 0.5, 0.5, 0.5, 0.0);
-            player.sendMessage("§aВы взяли моба.");
-        } else {
-            player.sendMessage("§cМоб не найден поблизости.");
-        }
-    }
-
-} catch (e) {
-    player.sendMessage("§cПроизошла ошибка: " + e.message);
-} `;
+        const jsonSystemPrompt = process.env.ITEM_JSON_SYSTEM_PROMPT || 'SYSTEM: JSON generation instructions will be provided here.';
         const jsonText = await geminiGenerateText([
             { role: 'user', parts: [{ text: jsonSystemPrompt }] },
             { role: 'user', parts: [{ text: 'Концепт предмета:\n' + conceptText + '\nСгенерируй итоговый JSON строго по формату.' }] }
-        ], 1, 'gemini-2.5-flash');
+        ], 0.0, 'gemini-2.5-flash');
 
         let responseJson = extractJSON(jsonText);
         if (!responseJson) {
@@ -722,7 +410,7 @@ try {
         }
 
         // Если base = custom, генерируем текстуру и подменяем поле texture URL-ом
-        if (responseJson.base.toLowerCase() === 'custom') {
+        if (responseJson.base === 'custom') {
             const textureUrl = await generateTexture(responseJson.texture, !!responseJson.two_handed);
             responseJson.texture = textureUrl;
         }
@@ -742,4 +430,3 @@ try {
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
-
