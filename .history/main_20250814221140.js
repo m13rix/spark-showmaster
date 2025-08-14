@@ -86,10 +86,6 @@ app.post('/api/generate-image', async (req, res) => {
 });
 
 function extractJSON(str) {
-    if (!str || typeof str !== 'string') {
-        return null;
-    }
-
     const openBrackets = ['{', '['];
     const closeBrackets = ['}', ']'];
 
@@ -102,10 +98,7 @@ function extractJSON(str) {
         }
     }
 
-    if (startIndex === -1) {
-        console.log('[extractJSON] No opening bracket found in:', str);
-        return null;
-    }
+    if (startIndex === -1) return null;
 
     const stack = [];
     let inString = false;
@@ -146,12 +139,8 @@ function extractJSON(str) {
     }
 
     try {
-        const jsonStr = str.slice(startIndex, endIndex);
-        const result = JSON.parse(jsonStr);
-        console.log('[extractJSON] Successfully extracted JSON:', result);
-        return result;
+        return JSON.parse(str.slice(startIndex, endIndex));
     } catch (e) {
-        console.log('[extractJSON] Failed to parse JSON:', str.slice(startIndex, endIndex), 'Error:', e.message);
         return null;
     }
 }
@@ -304,10 +293,8 @@ async function invokeMainModel(prompt) {
 }
 
 async function checkItems(text = "", items = "нет предметов") {
-    try {
-        console.log('[checkItems] Checking items for text:', text, 'items:', items);
 
-        const designerSystemPrompt = process.env.DESIGNER_SYSTEM_PROMPT || `### Системный Промпт (Инструкция для ИИ-Гейм-дизайнера v2.2)
+    const designerSystemPrompt = process.env.DESIGNER_SYSTEM_PROMPT || `### Системный Промпт (Инструкция для ИИ-Гейм-дизайнера v2.2)
 
 # РОЛЬ И ЦЕЛЬ
 Ты — гейм-дизайнер для Minecraft-сервера. Твоя работа — **кратко и четко** описать игровую механику. Ты берешь простую идею от пользователя и даешь **простое техническое задание**. 
@@ -391,13 +378,7 @@ async function checkItems(text = "", items = "нет предметов") {
 }` }] }
     ], 1, 'gemini-2.5-flash');
 
-    console.log('[checkItems] Generated response:', resultText);
     return resultText;
-
-    } catch (error) {
-        console.error('[checkItems] Error:', error);
-        return '{"Success": false, "Error": "Ошибка при проверке предметов: ' + error.message + '"}';
-    }
 }
 
 async function generateTexture(prompt = "", twoHanded = false){
@@ -436,24 +417,23 @@ app.post('/api/generate-item', async (req, res) => {
 
         // Шаг 0: Проверяем предметы
         const itemsResponse = await checkItems(prompt, items);
-        console.log(itemsResponse)
         const itemsJson = extractJSON(itemsResponse);
-
+        
         // Проверяем, что JSON был успешно извлечен
         if (!itemsJson) {
             console.log('[generate-item] Failed to extract JSON from items response:', itemsResponse);
-            return res.status(400).json({
-                success: false,
-                error: 'Ошибка при проверке предметов: не удалось обработать ответ'
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Ошибка при проверке предметов: не удалось обработать ответ' 
             });
         }
-
+        
         const areItemsValid = itemsJson["Success"];
         if (areItemsValid === false) {
             console.log(itemsJson["Error"]);
-            return res.json({
-                success: false,
-                error: itemsJson["Error"]
+            return res.json({ 
+                success: false, 
+                error: itemsJson["Error"] 
             });
         }
 
