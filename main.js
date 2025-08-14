@@ -157,11 +157,12 @@ function extractJSON(str) {
 }
 
 // Универсальный генератор текста через новый SDK @google/genai
-async function geminiGenerateText(contents, temperature = 0.7, model = 'gemini-2.5-flash') {
+async function geminiGenerateText(contents, temperature = 0.7, model = 'gemini-2.5-flash', systemPrompt) {
     const config = {
         responseMimeType: 'text/plain',
         thinkingConfig: { includeThoughts: false },
-        temperature: temperature
+        temperature: temperature,
+        systemInstruction: systemPrompt
     };
 
     const response = await geminiClient.models.generateContentStream({
@@ -369,8 +370,8 @@ async function checkItems(text = "", items = "нет предметов") {
 **Расходники:** 1 железный слиток за выстрел
 **Эффекты:** Громкий выстрел, дымок от ствола, яркая вспышка при попадании
 **Баланс:** Высокий урон и дальность, но медленная перезарядка (3 секунды) и дорогие патроны`;
-    const resultText = await geminiGenerateText([
-        { role: 'user', parts: [{ text: designerSystemPrompt }] },
+
+        const resultText = await geminiGenerateText([
         { role: 'user', parts: [{ text: `Подходят ли предметы:
 ` + items + `
 Для крафта предмета "` + text + `"
@@ -389,7 +390,7 @@ async function checkItems(text = "", items = "нет предметов") {
   "Success": false,
   "Error": "Для крафта ракеты нужен Порох (минимум 3), Алмазный блок (хотя бы 1)"
 }` }] }
-    ], 1, 'gemini-2.5-flash');
+    ], 1, 'gemini-2.5-flash', designerSystemPrompt);
 
     console.log('[checkItems] Generated response:', resultText);
     return resultText;
@@ -521,9 +522,8 @@ app.post('/api/generate-item', async (req, res) => {
 **Эффекты:** Громкий выстрел, дымок от ствола, яркая вспышка при попадании
 **Баланс:** Высокий урон и дальность, но медленная перезарядка (3 секунды) и дорогие патроны`;
         const conceptText = await geminiGenerateText([
-            { role: 'user', parts: [{ text: designerSystemPrompt }] },
             { role: 'user', parts: [{ text: 'Создай предмет по идее пользователя: ' + prompt }] }
-        ], 1, 'gemini-2.5-flash');
+        ], 1, 'gemini-2.5-flash', designerSystemPrompt);
         console.log(conceptText);
 
         // Шаг 2: генерируем итоговый JSON (другая роль/системный промпт)
@@ -779,9 +779,8 @@ try {
     player.sendMessage("§cПроизошла ошибка: " + e.message);
 } `;
         const jsonText = await geminiGenerateText([
-            { role: 'user', parts: [{ text: jsonSystemPrompt }] },
             { role: 'user', parts: [{ text: 'Концепт предмета:\n' + conceptText + '\nСгенерируй итоговый JSON строго по формату.' }] }
-        ], 1, 'gemini-2.5-flash');
+        ], 1, 'gemini-2.5-flash', jsonSystemPrompt);
 
         let responseJson = extractJSON(jsonText);
         if (!responseJson) {
