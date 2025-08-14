@@ -31,7 +31,7 @@ if (!fs.existsSync(uploadDir)) {
 app.use('/image', express.static(uploadDir));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const together = new Together({ apiKey: process.env.TOGETHER_API_KEY });
+const together = new Together({ apiKey: "bcb2dfeb195a68c76a53d8b682a21609ad69de7b16335125cfd3d9342b19eb37" });
 const geminiClient = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
 });
